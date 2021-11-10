@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Table, Button, Badge } from 'react-bootstrap';
+import { Table, Button, Badge, Modal } from 'react-bootstrap';
 import './App.css';
 
 const fakeAPI = {
@@ -85,6 +85,9 @@ export default function App() {
   const [disponivel, setDisponivel] = useState();
   const [barraDias, setBarraDias] = useState();
   const [reservando, setReservando] = useState({ turnos: 0 });
+  const [show, setShow] = useState(false);
+  const [modalMsg, setModalMsg] = useState({ titulo: '', texto: '', botao: '' });
+  const handleClose = () => setShow(false);
 
   function handleUnidades(event) {
     setAndares();
@@ -134,6 +137,35 @@ export default function App() {
 
   function handleCancelar() {
     setReservando({ turnos: 0 });
+  }
+
+  const handleReservar = () => {
+    if (reservando.turnos > 10) {
+      setModalMsg({
+        titulo: 'Atenção!',
+        texto: 'Periodo de reserva máxima atingida, o máximo são 10 periodos',
+        botao: 'Entendi!',
+        callback: handleClose
+      })
+      setShow(true);
+      return;
+    }
+
+    setModalMsg({
+      titulo: 'Confirmação de Reserva',
+      texto: 'Clique em confirmar para reservar os turnos escolhidos.',
+      botao: 'Confirmar',
+      callback: handleRegistroOk
+    })
+    setShow(true);
+  }
+  const handleRegistroOk = () => {
+    setModalMsg({
+      titulo: 'Reserva Confirmada',
+      texto: 'Sua reserva foi confirmada com sucesso',
+      botao: 'OK',
+      callback: handleClose
+    })
   }
 
   return (
@@ -186,12 +218,32 @@ export default function App() {
           <Button onClick={handleCancelar} variant='warning'>
             cancelar <Badge bg="secondary"></Badge>
           </Button>
-          <Button variant={reservando.turnos > 10 ? 'danger' : 'primary'}>
+          <Button onClick={handleReservar} variant={reservando.turnos > 10 ? 'danger' : 'primary'}>
             Registrar<Badge bg="secondary">:{reservando.turnos}</Badge>
           </Button>
         </>
-
       }
-    </div>
+
+      <Modal
+        show={show}
+        onHide={handleClose}
+        backdrop="static"
+        keyboard={false}
+      >
+        <Modal.Header closeButton>
+          <Modal.Title>{modalMsg.titulo}</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          {modalMsg.texto}
+        </Modal.Body>
+        <Modal.Footer>
+          <Button variant="secondary" onClick={handleClose}>
+            Fechar
+          </Button>
+          <Button onClick={modalMsg.callback} variant="primary">{modalMsg.botao}</Button>
+        </Modal.Footer>
+      </Modal>
+
+    </div >
   )
 }
