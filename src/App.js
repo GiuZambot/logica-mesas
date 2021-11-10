@@ -59,22 +59,50 @@ const fakeAPI = {
     {
       id: 0,
       mesa: 1,
-      dia: 4
+      dia: 4,
+      manha: true,
+      tarde: true,
+      noite: true
     },
     {
       id: 1,
       mesa: 2,
-      dia: 4
+      dia: 4,
+      manha: true,
+      tarde: true,
+      noite: true
     },
     {
       id: 2,
       mesa: 1,
-      dia: 5
+      dia: 5,
+      manha: true,
+      tarde: true,
+      noite: true
     },
     {
       id: 3,
+      mesa: 1,
+      dia: 6,
+      manha: true,
+      tarde: false,
+      noite: false
+    },
+    {
+      id: 4,
+      mesa: 2,
+      dia: 6,
+      manha: true,
+      tarde: false,
+      noite: false
+    },
+    {
+      id: 5,
       mesa: 4,
-      dia: 5
+      dia: 5,
+      manha: true,
+      tarde: true,
+      noite: true
     },
   ]
 }
@@ -117,14 +145,23 @@ export default function App() {
     for (let dia = 1; dia < 7; dia++) {
       const registrosDia = fakeAPI.registros.filter(reg => reg.dia === dia);
       let qtdMesaDisponivel = 0;
+      let qtdMesaManha = 0;
+      let qtdMesaTarde = 0;
+      let qtdMesaNoite = 0;
 
       for (const mesa of mesas) {
         const mesadispo = registrosDia.some(regdia => regdia.mesa === mesa.id);
         if (!mesadispo) qtdMesaDisponivel++;
+        const mesaManha = registrosDia.findIndex(regdia => (regdia.mesa === mesa.id && regdia.manha === true));
+        if (mesaManha === -1) qtdMesaManha++;
+        const mesaTarde = registrosDia.findIndex(regdia => (regdia.mesa === mesa.id && regdia.tarde === true));
+        if (mesaTarde === -1) qtdMesaTarde++;
+        const mesaNoite = registrosDia.findIndex(regdia => (regdia.mesa === mesa.id && regdia.noite === true));
+        if (mesaNoite === -1) qtdMesaNoite++;
       }
 
       dias.push(<th>{dia}/11</th>);
-      temMesaDia.push({ dia, qtdMesaDisponivel });
+      temMesaDia.push({ dia, qtdMesaDisponivel, qtdMesaManha, qtdMesaTarde, qtdMesaNoite });
     }
 
     setDisponivel(dias);
@@ -195,18 +232,18 @@ export default function App() {
                 <Button
                   className='turnos'
                   onClick={handleRegistrando}
-                  variant={turnos.qtdMesaDisponivel ? 'primary' : 'secondary'}>
-                  Manhã<Badge bg="secondary">{turnos.qtdMesaDisponivel}</Badge></Button>
+                  variant={turnos.qtdMesaManha ? 'primary' : 'secondary'}>
+                  Manhã<Badge bg="secondary">{turnos.qtdMesaManha}</Badge></Button>
                 <Button
                   className='turnos'
                   onClick={handleRegistrando}
-                  variant={turnos.qtdMesaDisponivel ? 'primary' : 'secondary'}
-                >Tarde<Badge bg="secondary">{turnos.qtdMesaDisponivel}</Badge></Button>
+                  variant={turnos.qtdMesaTarde ? 'primary' : 'secondary'}
+                >Tarde<Badge bg="secondary">{turnos.qtdMesaTarde}</Badge></Button>
                 <Button
                   className='turnos'
                   onClick={handleRegistrando}
-                  variant={turnos.qtdMesaDisponivel ? 'primary' : 'secondary'}
-                >Noite<Badge bg="secondary">{turnos.qtdMesaDisponivel}</Badge></Button>
+                  variant={turnos.qtdMesaNoite ? 'primary' : 'secondary'}
+                >Noite<Badge bg="secondary">{turnos.qtdMesaNoite}</Badge></Button>
               </td>)}
             </tr>
           </tbody>
