@@ -120,6 +120,7 @@ export default function App() {
   function handleUnidades(event) {
     setAndares();
     setDisponivel();
+    setReservando({ turnos: 0 });
     if (!event.currentTarget.value) {
       setUnidade();
       return;
