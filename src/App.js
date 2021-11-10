@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Table } from 'react-bootstrap';
+import { Table, Button, Badge } from 'react-bootstrap';
 import './App.css';
 
 const fakeAPI = {
@@ -84,8 +84,24 @@ export default function App() {
   const [unidade, setUnidade] = useState();
   const [disponivel, setDisponivel] = useState();
   const [barraDias, setBarraDias] = useState();
+  const [reservando, setReservando] = useState({ turnos: 0 });
 
-  const handleAndares = (andarEvent) => {
+  function handleUnidades(event) {
+    setAndares();
+    setDisponivel();
+    if (!event.currentTarget.value) {
+      setUnidade();
+      return;
+    }
+    setUnidade(event.currentTarget.value);
+    const andares = fakeAPI.andares[event.currentTarget.value].map((entrie, index) =>
+      <option key={`${entrie}`} value={entrie}>
+        {entrie}º Andar. Mesas: {fakeAPI.mesas.filter((x) => (x.unidade === event.currentTarget.value && x.andar === index)).length}
+      </option>);
+    setAndares(andares);
+  }
+
+  function handleAndares(andarEvent) {
     if (!andarEvent.currentTarget.value) {
       setDisponivel();
       return;
@@ -105,26 +121,19 @@ export default function App() {
       }
 
       dias.push(<th>{dia}/11</th>);
-      temMesaDia.push(<td key={`${dia}`}>{qtdMesaDisponivel > 0 ? `${qtdMesaDisponivel} mesas` : 'Não tem Mesas'}</td>);
+      temMesaDia.push({ dia, qtdMesaDisponivel });
     }
 
     setDisponivel(dias);
     setBarraDias(temMesaDia);
   }
 
-  const handleUnidades = (event) => {
-    setAndares();
-    setDisponivel();
-    if (!event.currentTarget.value) {
-      setUnidade();
-      return;
-    }
-    setUnidade(event.currentTarget.value);
-    const andares = fakeAPI.andares[event.currentTarget.value].map((entrie, index) =>
-      <option key={`${entrie}`} value={entrie}>
-        {entrie}º Andar. Mesas: {fakeAPI.mesas.filter((x) => (x.unidade === event.currentTarget.value && x.andar === index)).length}
-      </option>);
-    setAndares(andares);
+  function handleRegistrando() {
+    setReservando({ turnos: reservando.turnos + 1 });
+  }
+
+  function handleCancelar() {
+    setReservando({ turnos: 0 });
   }
 
   return (
@@ -150,10 +159,35 @@ export default function App() {
           </thead>
           <tbody>
             <tr>
-              {barraDias}
+              {barraDias.map((turnos) => <td key={`turno-${turnos.dia}`}>
+                <Button
+                  onClick={handleRegistrando}
+                  variant={turnos.qtdMesaDisponivel ? 'primary' : 'secondary'}>
+                  Manhã<Badge bg="secondary">{turnos.qtdMesaDisponivel}</Badge></Button>
+                <Button
+                  onClick={handleRegistrando}
+                  variant={turnos.qtdMesaDisponivel ? 'primary' : 'secondary'}
+                >Tarde<Badge bg="secondary">{turnos.qtdMesaDisponivel}</Badge></Button>
+                <Button
+                  onClick={handleRegistrando}
+                  variant={turnos.qtdMesaDisponivel ? 'primary' : 'secondary'}
+                >Noite<Badge bg="secondary">{turnos.qtdMesaDisponivel}</Badge></Button>
+              </td>)}
             </tr>
           </tbody>
         </Table>
+      }
+
+      {reservando.turnos > 0 &&
+        <>
+          <Button onClick={handleCancelar} variant='warning'>
+            cancelar <Badge bg="secondary"></Badge>
+          </Button>
+          <Button variant={reservando.turnos > 10 ? 'danger' : 'primary'}>
+            Registrar<Badge bg="secondary">:{reservando.turnos}</Badge>
+          </Button>
+        </>
+
       }
     </div>
   )
