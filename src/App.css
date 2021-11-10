@@ -1,4 +1,5 @@
-body {
+#root {
+  width: 100%;
   display: flex;
   justify-content:center;
   align-items: center;
@@ -19,6 +20,11 @@ select {
   padding: 8px;
 }
 
-Button {
+.turnos {
   margin-bottom: 5px;
+  width: 100%;
+}
+
+.badge {
+  display: block;
 }

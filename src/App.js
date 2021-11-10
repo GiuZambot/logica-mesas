@@ -161,14 +161,17 @@ export default function App() {
             <tr>
               {barraDias.map((turnos) => <td key={`turno-${turnos.dia}`}>
                 <Button
+                  className='turnos'
                   onClick={handleRegistrando}
                   variant={turnos.qtdMesaDisponivel ? 'primary' : 'secondary'}>
                   Manhã<Badge bg="secondary">{turnos.qtdMesaDisponivel}</Badge></Button>
                 <Button
+                  className='turnos'
                   onClick={handleRegistrando}
                   variant={turnos.qtdMesaDisponivel ? 'primary' : 'secondary'}
                 >Tarde<Badge bg="secondary">{turnos.qtdMesaDisponivel}</Badge></Button>
                 <Button
+                  className='turnos'
                   onClick={handleRegistrando}
                   variant={turnos.qtdMesaDisponivel ? 'primary' : 'secondary'}
                 >Noite<Badge bg="secondary">{turnos.qtdMesaDisponivel}</Badge></Button>
