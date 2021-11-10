@@ -161,7 +161,7 @@ export default function App() {
         if (mesaNoite === -1) qtdMesaNoite++;
       }
 
-      dias.push(<th>{dia}/11</th>);
+      dias.push(<th key={`dia-${dia}`}>{dia}/11</th>);
       temMesaDia.push({ dia, qtdMesaDisponivel, qtdMesaManha, qtdMesaTarde, qtdMesaNoite });
     }
 
@@ -221,7 +221,7 @@ export default function App() {
       }
 
       {disponivel &&
-        <Table striped bordered hover size="sm">
+        <Table responsive striped bordered size="sm">
           <thead>
             <tr>
               {disponivel}
