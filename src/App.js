@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Table, Button, Badge, Modal } from 'react-bootstrap';
 import './App.css';
 
@@ -109,38 +109,23 @@ const fakeAPI = {
 
 export default function App() {
   const [andares, setAndares] = useState();
+  const [andar, setAndar] = useState();
   const [unidade, setUnidade] = useState();
   const [disponivel, setDisponivel] = useState();
   const [barraDias, setBarraDias] = useState();
+  const [reserva, setReserva] = useState([]);
   const [reservando, setReservando] = useState({ turnos: 0 });
+  const [registros, setRegistros] = useState();
   const [show, setShow] = useState(false);
   const [modalMsg, setModalMsg] = useState({ titulo: '', texto: '', botao: '' });
   const handleClose = () => setShow(false);
 
-  function handleUnidades(event) {
-    setAndares();
-    setDisponivel();
-    setReservando({ turnos: 0 });
-    if (!event.currentTarget.value) {
-      setUnidade();
-      return;
-    }
-    setUnidade(event.currentTarget.value);
-    const andares = fakeAPI.andares[event.currentTarget.value].map((entrie, index) =>
-      <option key={`${entrie}`} value={entrie}>
-        {entrie}º Andar. Mesas: {fakeAPI.mesas.filter((x) => (x.unidade === event.currentTarget.value && x.andar === index)).length}
-      </option>);
-    setAndares(andares);
-  }
+  useEffect(() => {
+    setRegistros(fakeAPI.registros);
+    return () => { }
+  }, [registros])
 
-  function handleAndares(andarEvent) {
-    if (!andarEvent.currentTarget.value) {
-      setDisponivel();
-      return;
-    }
-    const andar = +andarEvent.currentTarget.value;
-    const mesas = fakeAPI.mesas.filter((mesa) => (mesa.unidade === unidade && mesa.andar === andar));
-
+  function geraCalendario(mesas) {
     let dias = [];
     let temMesaDia = [];
     for (let dia = 1; dia < 7; dia++) {
@@ -164,13 +149,51 @@ export default function App() {
       dias.push(<th key={`dia-${dia}`}>{dia}/11</th>);
       temMesaDia.push({ dia, qtdMesaDisponivel, qtdMesaManha, qtdMesaTarde, qtdMesaNoite });
     }
+    return [dias, temMesaDia]
+  }
+
+  function handleUnidades(event) {
+    setAndares();
+    setDisponivel();
+    setReservando({ turnos: 0 });
+    if (!event.currentTarget.value) {
+      setUnidade();
+      return;
+    }
+    setUnidade(event.currentTarget.value);
+    const andares = fakeAPI.andares[event.currentTarget.value].map((entrie, index) =>
+      <option key={`${entrie}`} value={entrie}>
+        {entrie}º Andar. Mesas: {fakeAPI.mesas.filter((x) => (x.unidade === event.currentTarget.value && x.andar === index)).length}
+      </option>);
+    setAndares(andares);
+  }
+
+  function handleAndares(andarEvent) {
+    if (!andarEvent.currentTarget.value) {
+      setDisponivel();
+      return;
+    }
+    const andarSelecionado = +andarEvent.currentTarget.value;
+    setAndar(andarSelecionado);
+    const mesas = fakeAPI.mesas.filter((mesa) => (mesa.unidade === unidade && mesa.andar === andarSelecionado));
+    const [dias, temMesaDia] = geraCalendario(mesas);
 
     setDisponivel(dias);
     setBarraDias(temMesaDia);
   }
 
-  function handleRegistrando() {
+  function handleRegistrando(dia, turno) {
+    console.clear();
+    const reservaUp = [...reserva];
+    const find = reservaUp.findIndex((reg) => reg.dia === dia);
+    if (find === -1) {
+      reservaUp.push({ dia, [turno]: true, mesa: 1 });
+    } else {
+      reservaUp.splice(find, 1, { ...reservaUp[find], dia, [turno]: true });
+    }
     setReservando({ turnos: reservando.turnos + 1 });
+    setReserva(reservaUp);
+    console.log(reservaUp);
   }
 
   function handleCancelar() {
@@ -197,7 +220,16 @@ export default function App() {
     })
     setShow(true);
   }
+
   const handleRegistroOk = () => {
+    fakeAPI.registros = [...registros, ...reserva];
+    setRegistros(fakeAPI.registros);
+    setReserva([]);
+    setReservando({ turnos: 0 });
+    const mesas = fakeAPI.mesas.filter((mesa) => (mesa.unidade === unidade && mesa.andar === andar));
+    const [dias, temMesaDia] = geraCalendario(mesas);
+    setDisponivel(dias);
+    setBarraDias(temMesaDia);
     setModalMsg({
       titulo: 'Reserva Confirmada',
       texto: 'Sua reserva foi confirmada com sucesso',
@@ -232,17 +264,17 @@ export default function App() {
               {barraDias.map((turnos) => <td key={`turno-${turnos.dia}`}>
                 <Button
                   className='turnos'
-                  onClick={handleRegistrando}
-                  variant={turnos.qtdMesaManha ? 'primary' : 'secondary'}>
+                  onClick={() => handleRegistrando(turnos.dia, 'manha')}
+                  variant={(turnos.qtdMesaManha) ? 'primary' : 'secondary'}>
                   Manhã<Badge bg="secondary">{turnos.qtdMesaManha}</Badge></Button>
                 <Button
                   className='turnos'
-                  onClick={handleRegistrando}
+                  onClick={() => handleRegistrando(turnos.dia, 'tarde')}
                   variant={turnos.qtdMesaTarde ? 'primary' : 'secondary'}
                 >Tarde<Badge bg="secondary">{turnos.qtdMesaTarde}</Badge></Button>
                 <Button
                   className='turnos'
-                  onClick={handleRegistrando}
+                  onClick={() => handleRegistrando(turnos.dia, 'noite')}
                   variant={turnos.qtdMesaNoite ? 'primary' : 'secondary'}
                 >Noite<Badge bg="secondary">{turnos.qtdMesaNoite}</Badge></Button>
               </td>)}
@@ -281,6 +313,34 @@ export default function App() {
           <Button onClick={modalMsg.callback} variant="primary">{modalMsg.botao}</Button>
         </Modal.Footer>
       </Modal>
+
+      {registros &&
+        <>
+          <h3>Meus Registros:</h3>
+          <Table responsive striped bordered size="sm">
+            <thead>
+              <tr>
+                <th>Dia</th>
+                <th>mesa</th>
+                <th>Manhã</th>
+                <th>Tarde</th>
+                <th>Noite</th>
+              </tr>
+            </thead>
+            <tbody>
+              {registros.map((reg) =>
+                <tr key={`reservelist${reg.dia}${reg.mesa}`}>
+                  <td>{reg.dia}/12/2021</td>
+                  <td>{reg.mesa}</td>
+                  <td>{reg.manha ? 'Reservado' : '-'}</td>
+                  <td>{reg.tarde ? 'Reservado' : '-'}</td>
+                  <td>{reg.noite ? 'Reservado' : '-'}</td>
+                </tr>
+              )}
+            </tbody>
+          </Table>
+        </>
+      }
 
     </div >
   )
